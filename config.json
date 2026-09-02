@@ -1,0 +1,281 @@
+{
+  "_README": [
+    "Every setting the app reads. Nothing else is configurable, on purpose.",
+    "",
+    "MONGO_URI is the READ-ONLY user. mv/db.py opens the client with a read preference of",
+    "secondaryPreferred and hands out a wrapper with no write surface at all - see the guard",
+    "at the top of that file. MV_MONGO_URI overrides this value, so a shared machine never",
+    "has to edit the file. Same for MV_GEMINI_KEY."
+  ],
+  "mongo_uri": "mongodb://readonlyUser:Mineralviewreadonly%409461@108.181.152.168:27017/",
+  "server_selection_timeout_ms": 12000,
+  "socket_timeout_ms": 180000,
+  "_collections_note": [
+    "THE CORRECTED SOURCE MAP. Four of these replace what the mockup's DATA-CONTRACT named,",
+    "and each correction is a measurement, not a preference:",
+    "",
+    "  production   was ProdMvestPortal.Activity_Production (2,098,077 pre-computed lease-month",
+    "               docs). Replaced by MonthlyProductionVolumes + the transform in",
+    "               Production_Activity_API_Spec.md section 4. The stored copy is pure",
+    "               duplication of this collection in a different shape, it is stale between",
+    "               rebuilds, and the lease id IS the _id here - so one lease is a primary-key",
+    "               hit, not a scan. mv/production.py implements the spec exactly.",
+    "",
+    "  radius       was ProdMvestPortal.Adjacent_Lease_Activity. Replaced by",
+    "               GeoMapPortal.LeaseRadiusData, which keys on the same {district}_{lease} id",
+    "               and carries BOTH the nearby permits and the nearby leases, at three radii,",
+    "               in one document. Adjacent_Lease_Activity carried only the lease side.",
+    "",
+    "  probability  was Decline_data_to_web.new_well_probability - THAT COLLECTION DOES NOT",
+    "               EXIST. The real fields are 'NEW WELL PROBABILITY' (0-100) and 'NEW WELL",
+    "               PROBABILITY CATEGORY' on Decline_data_to_web.Data_to_web, keyed on the same",
+    "               lease id. See probability_bands below for the sentinel that must be filtered.",
+    "",
+    "  activity     Activity_Test is the live event feed - written today, five activity types,",
+    "               and it carries activity_notification (pre-written text) plus CreateTS.",
+    "               Together with the derived activity_id 3 it is the canonical event vocabulary",
+    "               the Postgres side never had."
+  ],
+  "collections": {
+    "owners": {
+      "db": "MineralOwnersInfoDB",
+      "name": "Mineral_Owners_Data_Master"
+    },
+    "production": {
+      "db": "ProdMvestPortal",
+      "name": "MonthlyProductionVolumes"
+    },
+    "activity": {
+      "db": "ProdMvestPortal",
+      "name": "Activity_Test"
+    },
+    "radius": {
+      "db": "GeoMapPortal",
+      "name": "LeaseRadiusData"
+    },
+    "probability": {
+      "db": "Decline_data_to_web",
+      "name": "Data_to_web"
+    },
+    "operator_summary": {
+      "db": "Operator_Directory",
+      "name": "Operator_Production_Summary_Yearly"
+    },
+    "operator_leases": {
+      "db": "Operator_Directory",
+      "name": "Operators_Filter_Data_Final"
+    },
+    "operator_logos": {
+      "db": "Operator_Directory",
+      "name": "Operator_Logos"
+    },
+    "community": {
+      "db": "MViewNewCommunity",
+      "name": "privategroupthreads"
+    }
+  },
+  "owner": {
+    "_note": [
+      "LOCKED to one owner. There is no picker: this app exists to show Brown Jon S's alerts, and a",
+      "dropdown of 225 other people's records is not part of the product.",
+      "",
+      "MEASURED 2026-09-02 on the 2025 roll:",
+      "  ownername 'Brown Jon S'  ->  3,698 rows · 225 owner numbers · 124 counties · 2,708 leases",
+      "  and ownernumber is a COUNTY appraisal key, not a person: 127,650 of 420,296 numbers",
+      "  (30.4%) are carried by more than one person. Number 708789 alone is seven people.",
+      "",
+      "So the owner is (ownernumber AND ownername) - both, always. That resolves to the Martin",
+      "County record: 103 leases, Permian Basin, Diamondback / Birch / XTO, with real production, a",
+      "real operator transfer and real nearby permits.",
+      "",
+      "scope 'record' reads that one record. scope 'name' would read all 2,708 leases under the",
+      "name - about 515 MB of production documents and several minutes, and it would merge 225",
+      "strangers' minerals into one portfolio. It is left configurable and NOT the default.",
+      "",
+      "year: the roll carries 2024 and 2025. Appraised_Value MUST be filtered to one year -",
+      "summing across years stacks the same interest twice."
+    ],
+    "name": "Brown Jon S",
+    "default_ownernumber": 708789,
+    "year": 2025,
+    "scope": "record"
+  },
+  "window": {
+    "_note": [
+      "Anchored on the DATA's own latest month, never the wall clock. Production posts on a",
+      "lag and MonthlyProductionVolumes carries trailing months with BOE 0 and",
+      "prod_report_filed_flag 'N' - measured on 08_55109, cycles 202607 and 202608 are both",
+      "present and both zero. Anchor on max(cycle) and the app opens by announcing that a",
+      "producing Diamondback lease has stopped. Anchor on the last NON-ZERO month and it is",
+      "right. The UI prints the as-of date so nobody reads it as today."
+    ],
+    "recent_months": 3,
+    "compare_months": 3,
+    "ttm_months": 12,
+    "activity_days": 90,
+    "from_cycle": "202501"
+  },
+  "probability_bands": {
+    "_note": [
+      "MEASURED over Data_to_web: -1 appears on 179,231 leases and 'Undefined' on 4. It is a",
+      "NOT-MODELLED sentinel, not a probability. Rendering it as 0% would tell an owner their",
+      "acreage has no chance of a new well when the truth is that we have not modelled it.",
+      "Filtered out at source in mv/collect.py."
+    ],
+    "sentinel": -1,
+    "bands": [
+      [
+        "Very Poor",
+        0,
+        20
+      ],
+      [
+        "Poor",
+        20,
+        40
+      ],
+      [
+        "Average",
+        40,
+        60
+      ],
+      [
+        "Good",
+        60,
+        80
+      ],
+      [
+        "Very Good",
+        80,
+        100
+      ]
+    ]
+  },
+  "prices": {
+    "_note": [
+      "LIVE, not EIA. The shipped ticker.json in the redesign repo carries",
+      "'End-of-day spot settlements. Not live prices.' with lag_days 8 - so an alert headed",
+      "'Know the same day' was reporting a settlement published the week before.",
+      "",
+      "These are front-month NYMEX futures, quoted intraday. change_pct is computed against",
+      "the previous DAILY CLOSE from the same series, never against meta.chartPreviousClose -",
+      "on a multi-day range that field is the close BEFORE the window, which reports a normal",
+      "day as an 8% move."
+    ],
+    "symbols": [
+      {
+        "key": "wti",
+        "symbol": "CL=F",
+        "label": "WTI",
+        "unit": "$/bbl",
+        "desc": "WTI front-month, NYMEX"
+      },
+      {
+        "key": "gas",
+        "symbol": "NG=F",
+        "label": "NAT GAS",
+        "unit": "$/MMBtu",
+        "desc": "Henry Hub front-month, NYMEX"
+      },
+      {
+        "key": "brent",
+        "symbol": "BZ=F",
+        "label": "BRENT",
+        "unit": "$/bbl",
+        "desc": "Brent front-month, NYMEX"
+      }
+    ],
+    "move_threshold_pct": 1.0,
+    "timeout_seconds": 20,
+    "cache_seconds": 60
+  },
+  "ai": {
+    "_note": [
+      "Gemini rewrites the WORDING of findings that signals have already measured. It never",
+      "decides what is true and it cannot introduce a number - mv/summarize.py checks every",
+      "numeric token in the output against the facts and falls back to measured prose on any",
+      "miss. The source line is never taken from the model.",
+      "",
+      "BUDGET IS PER PLAN, which is what 'use it as per the plan' means here:",
+      "  free     0 alerts reworded - measured prose only, and the footer says so",
+      "  pro      the top 3 by rank",
+      "  premium  all of them, plus the one-line summary at the top",
+      "One call per panel either way - the alerts go in a single batched prompt, not one",
+      "request each."
+    ],
+    "enabled": true,
+    "endpoint": "https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent",
+    "model": "gemini-3.5-flash-lite",
+    "api_key": "AQ.Ab8RN6L1npbrhvRGwrGckGAJQyKu1hANLypS4ojuiHGTgVSJiA",
+    "timeout_seconds": 45,
+    "max_output_tokens": 1600,
+    "temperature": 0.35,
+    "plan_budget": {
+      "free": 0,
+      "pro": 3,
+      "premium": 99
+    }
+  },
+  "server": {
+    "host": "127.0.0.1",
+    "port": 8746
+  },
+  "ui": {
+    "_note": [
+      "The shell is the redesign's own owner-v42.html, served with its sidebar, top header, avatar",
+      "menu and four view densities intact. These keys only tell the binder which control to drive:",
+      "setViewTier() and mvSetFunnelState() already exist in that file.",
+      "",
+      "'simple' is the internal key; the rendered name is Essentials. 'Simple' reads as derogatory",
+      "about the reader and must never surface as copy.",
+      "",
+      "Plans are Free / Pro / Premium. The artifact's funnel cycler carries unclaimed/claimed/",
+      "trial/lapsed/paid and has no Pro at all, so the middle of the published ladder could not be",
+      "seen. plan_state maps each plan onto the funnel state the artifact does understand."
+    ],
+    "tiers": [
+      {
+        "key": "ultra",
+        "name": "Ultra"
+      },
+      {
+        "key": "simple",
+        "name": "Essentials"
+      },
+      {
+        "key": "detailed",
+        "name": "Detailed"
+      },
+      {
+        "key": "pro",
+        "name": "Professional"
+      }
+    ],
+    "plans": [
+      {
+        "key": "none",
+        "name": "Not claimed"
+      },
+      {
+        "key": "free",
+        "name": "Free"
+      },
+      {
+        "key": "pro",
+        "name": "Pro"
+      },
+      {
+        "key": "premium",
+        "name": "Premium"
+      }
+    ],
+    "default_tier": "detailed",
+    "default_plan": "premium",
+    "plan_state": {
+      "none": "unclaimed",
+      "free": "claimed",
+      "pro": "paid",
+      "premium": "paid"
+    }
+  }
+}
