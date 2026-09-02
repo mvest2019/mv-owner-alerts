@@ -3,7 +3,7 @@
 
     python server.py            then open http://127.0.0.1:8746
 
-Serves web/alerts.html - the redesign build's own owner portal, shell intact - and the live
+Serves public/alerts.html - the redesign build's own owner portal, shell intact - and the live
 alerts that bind.js drops into its app-alerts route.
 
 Standard library only, apart from pymongo. START.bat has to work on a machine where nothing has
@@ -39,7 +39,7 @@ from mv import collect as collector          # noqa: E402
 from mv import db, owner as owner_mod, summarize   # noqa: E402
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
-WEB = os.path.join(ROOT, "web")
+WEB = os.path.join(ROOT, "public")
 PAGE = "alerts.html"
 
 JOBS, JOBS_LOCK = {}, threading.Lock()

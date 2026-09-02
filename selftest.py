@@ -272,9 +272,9 @@ else:
 
 # ---------------------------------------------------------------- 12 · the built page
 print("\n12 - the built page kept the shell, and the binder is where it will run")
-_page = os.path.join(os.path.dirname(os.path.abspath(__file__)), "web", "alerts.html")
+_page = os.path.join(os.path.dirname(os.path.abspath(__file__)), "public", "alerts.html")
 if not os.path.isfile(_page):
-    skip("built page", "web/alerts.html not built - run tools/build_alerts.py")
+    skip("built page", "public/alerts.html not built - run tools/build_alerts.py")
 else:
     _html = io.open(_page, encoding="utf-8").read()
     _head = _html[:_html.find("</head>")]

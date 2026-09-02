@@ -19,7 +19,7 @@ if errorlevel 1 (
   python -m pip install --quiet pymongo
 )
 
-if not exist "web\alerts.html" (
+if not exist "public\alerts.html" (
   echo Building the alerts page from the owner artifact...
   python tools\build_alerts.py
   if errorlevel 1 (

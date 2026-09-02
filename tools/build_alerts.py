@@ -4,7 +4,7 @@
     python tools/build_alerts.py
 
 Reads  web/owner-v42.html   (the repo's assembled owner portal, 48 routes)
-Writes web/alerts.html      (the same portal, landing on #/app/alerts, wired to live data)
+Writes public/alerts.html      (the same portal, landing on #/app/alerts, wired to live data)
 
 WHY A BUILD STEP RATHER THAN A HAND EDIT
   The transform is recorded as code so it can be re-run when the artifact is re-copied, and so
@@ -41,7 +41,7 @@ import sys
 
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC = os.path.join(HERE, "web", "owner-v42.html")
-OUT = os.path.join(HERE, "web", "alerts.html")
+OUT = os.path.join(HERE, "public", "alerts.html")
 
 LANDING = "#/app/alerts"
 
