@@ -1,6 +1,21 @@
 {
-  "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/index.py" },
-    { "source": "/", "destination": "/alerts.html" }
+  "builds": [
+    {
+      "src": "api/index.py",
+      "use": "@vercel/python",
+      "config": {
+        "maxLambdaSize": "50mb",
+        "includeFiles": ["server.py", "config.json", "mv/**"]
+      }
+    },
+    {
+      "src": "public/**",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    { "src": "/api/(.*)", "dest": "/api/index.py" },
+    { "src": "/", "dest": "/public/alerts.html" },
+    { "src": "/(.*)", "dest": "/public/$1" }
   ]
 }
